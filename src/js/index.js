@@ -12,6 +12,17 @@
 // - [x] 메뉴를 삭제할 때
 // - [x] localStorage에 데이터를 읽어온다
 
+// TODO 카테고리별 메뉴판 정리
+// - [x] 에스프레소 메뉴판 정리
+// - [] 프라푸치노 메뉴판 정리
+// - [] 블렌디드 메뉴판 정리
+// - [] 티바나 메뉴판 정리
+// - [] 디저트 메뉴판 정리
+
+// TODO 카테고리별 메뉴판 정리
+
+//
+
 // localStorage에 데이터를 저장한다.
 // localStorage에 저장된 데이터를 읽어온다.
 // 메뉴판 종류별로 localStorage를 관리한다.
@@ -26,6 +37,7 @@ const $ = (selector) => document.querySelector(selector);
 const formTag = $("#espresso-menu-form");
 const inputTag = $("#espresso-menu-name");
 const ulTag = $("#espresso-menu-list");
+const navTag = $("nav");
 
 // 로컬스토리지 메서드, 상태는 변하는 데이터, 이 앱에서 변하는 것이 무엇인가 -  메뉴명
 const store = {
@@ -38,21 +50,29 @@ const store = {
 };
 
 function App() {
+  // this를 이용한 변수 선언 (배열)
   this.menu = [];
 
+  // App 시작 시,즉시 init메서드가 호출되어 웹페이지가 렌더링된다.
   this.init = () => {
-    if (store.getLocalStorage().length > 1) {
+    // 로컬스토리지에 저장된 값을 찾는다.
+    if (store.getLocalStorage().length >= 1) {
+      // 결과값을 menu에 할당한다.
       this.menu = store.getLocalStorage();
-      // this.menu.push(...store.getLocalStorage());
 
-      console.log(this.menu);
+      // this.menu.push(...store.getLocalStorage());
+      // console.log(this.menu);
     }
 
+    // 렌더 함수를 호출하여 렌더링을 진행한다.
     render();
+    console.log("init이 호출되었는가??");
   };
 
   const render = () => {
     // localStorage에 있는 데이터를 이용해서 렌더링
+    // App의 메서드 init 함수는 this.menu에 값을 할당한다.
+    // render함수는 this.menu로 menu에 접근 할 수 있다.
     const template = this.menu
       .map((menuItem, index) => {
         return `<li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
@@ -73,30 +93,45 @@ function App() {
       })
       .join("");
 
+    // ulTag를 기준으로 template가 아래에 렌더링된다.
     ulTag.innerHTML = template;
     updateMenuCount();
   };
 
   // 메뉴개수 표시 & input 초기화
   const updateMenuCount = () => {
+    // ulTag가 가지고 있는 모든 li의 길이를 구한다.
     const menuCount = ulTag.querySelectorAll("li").length;
+
+    // 변경된 개수를 새롭게 적용한다.
     $(".menu-count").textContent = `총 ${menuCount}개`;
 
+    // input 값을 초기화 시킨다.
     inputTag.value = "";
   };
 
   // 메뉴목록 추가
   const addMenuName = () => {
+    // 사용자가 입력한 input 값을 this.menu에 단순히 추가한다.
     this.menu.push({ name: inputTag.value });
+
+    // this를 이용한 전역변수 menu를 로컬스토리지에 저장한다.
     store.setLocalStorage(this.menu);
+
+    // 렌더 함수를 호출한다.
+    // ?! 메서드 init을 호출을 못하는데, 어떻게 로컬스토리지의
+    // ?! 값을 parsing 해서 렌더링을 할 수있는가?
+    // ? 혹시 submit 할때 이벤트 preventDefault ?
+    // ? 아니면 Enter 를 칠 떄, 달라지는 무언가 있는걸까?
     render();
   };
 
   // 메뉴이름 변경
   const updateMenuName = (e) => {
     // 인덱스 반환
-    const menuId = e.target.closest("li").dataset.menuId;
-    const $menuName = e.target.closest("li").querySelector(".menu-name");
+    const targetdLi = e.target.closest("li");
+    const menuId = targetdLi.dataset.menuId;
+    const $menuName = targetdLi.querySelector(".menu-name");
 
     const updatedMenuName = prompt(
       "메뉴명을 수정해주세요",
@@ -104,9 +139,13 @@ function App() {
     );
 
     // index 반환, this.menu[0], this.menu[1] ...
+    // 선택한 리스트의 이름에 프롬프트값을 넣어준다.
     this.menu[menuId].name = updatedMenuName;
-    // 변경사항 반영
+
+    // 로컬스토리지에 변경사항 반영
     store.setLocalStorage(this.menu);
+
+    // text 변경을 반영한다. render함수가 별도로 작동하지 않기 떄문에
     $menuName.textContent = updatedMenuName;
   };
 
@@ -172,78 +211,17 @@ function App() {
       }
     }
   });
+
+  navTag.addEventListener("click", (e) => {
+    const isCategoryButton = e.target.classList.contains("cafe-category-name");
+
+    if (isCategoryButton) {
+      const categoryName = e.target.dataset.categoryName;
+      console.log(categoryName);
+    }
+  });
 }
 
 const app = new App();
 app.init();
 console.log(app);
-// ! 오늘 얻은 인사이트
-//? 1. 이벤트 위임을 어떻게 할 수 있는지 알게되어 좋았다.
-//? 2. 요구사항을 전략적으로 접근해야되는지, 단계별로 세세하게 나누는 것이 중요하다
-//? 3. DOM 요소를 가져올 때 $표시로 변수처럼 사용 할 수 있어서 좋았다.
-//? 4. contains, closest, textContent, insertAdjacentHtml, e.target
-
-//! step1 목표
-//  - [x] 메뉴의 이름을 입력 받고 엔터키 입력으로 추가한다
-//  - [x] 메뉴의 이름을 입력 받고 확인 버튼을 클릭하면 메뉴를 추가한다.
-//  - [x] 추가되는 메뉴의 마크업은 `<ul id="espresso-menu-list" class="mt-3 pl-0"></ul>` 안에 삽입해야 한다.
-//  - [x] 총 메뉴 갯수를 count하여 상단에 보여준다.
-//  - [x] 메뉴가 추가되고 나면, input은 빈 값으로 초기화한다.
-//  - [x] 사용자 입력값이 빈 값이라면 추가되지 않는다.
-
-// 메뉴 수정 TODO
-// - [x] 메뉴의 수정 버튼 클릭 이벤트를 받고, 메뉴 수정하는 모달창이 뜬다.
-// - [x] 모달창에서 신규메뉴명을 입력 받고, 확인버튼을 누르면 메뉴가 수정된다.
-
-// 메뉴 삭제 TODO
-// - [x] 메뉴 삭제 버튼 클릭 이벤트를 받고, 메뉴 삭제 컨펌 모달창이 뜬다.
-// - [x] 확인 버튼을 끌릭하면 메뉴가 삭제된다.
-// - [x] 총 메뉴 갯수를 count하여 상단에 보여준다.
-
-//! 코드 주석 구분
-// todo 내 방법 - 클래스 이름으로 찾는 방법
-// const btn = e.target.className.split(" ").at(-1);
-// if (btn === "menu-edit-button") {
-//   console.log("수정버튼");
-// } else if (btn === "menu-remove-button") {
-//   console.log("제거버튼");
-// }
-
-// todo 내 방법 - 텍스트로 찾는방법
-// if (e.target.textContent === "수정") {
-//   console.log("수정버튼");
-// } else if (e.target.textContent === "삭제") {
-//   console.log("삭제버튼");
-// }
-
-// todo 내 방법 - 텍스트로 찾는방법
-// 부모 요소에서 자식요소로 접근하여 길이를 구하고 있다.
-//   const menuCount = $("#espresso-menu-list").querySelectorAll("li").length;
-
-// innerText와 textContent 차이점 style과 리플로우 발생. innerText는 좋지않다.
-//   $(".menu-count").innerText = `총 ${menuCount}개`;
-
-//   나의 솔루션
-//   $(".menu-count").textContent = `총 ${_$(".menu-list-item").length}개`;
-
-//   $("#espresso-menu-name").value = "";
-
-// const menuItemTemplate = (espressoMenuName) => {
-//   return `<li class="menu-list-item d-flex items-center py-2">
-//               <span class="w-100 pl-2 menu-name">${espressoMenuName}</span>
-//               <button
-//                 type="button"
-//                 class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
-//               >
-//                 수정
-//               </button>
-//               <button
-//                 type="button"
-//                 class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
-//               >
-//                 삭제
-//               </button>
-//             </li>`;
-// };
-
-// ulTag.insertAdjacentHTML("beforeend", menuItemTemplate(inputTag.value));
