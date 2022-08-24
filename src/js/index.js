@@ -1,3 +1,20 @@
+//! step1 목표
+//  - [x] 메뉴의 이름을 입력 받고 엔터키 입력으로 추가한다
+//  - [x] 메뉴의 이름을 입력 받고 확인 버튼을 클릭하면 메뉴를 추가한다.
+//  - [x] 추가되는 메뉴의 마크업은 `<ul id="espresso-menu-list" class="mt-3 pl-0"></ul>` 안에 삽입해야 한다.
+//  - [x] 총 메뉴 갯수를 count하여 상단에 보여준다.
+//  - [x] 메뉴가 추가되고 나면, input은 빈 값으로 초기화한다.
+//  - [x] 사용자 입력값이 빈 값이라면 추가되지 않는다.
+
+// 메뉴 수정 TODO
+// - [x] 메뉴의 수정 버튼 클릭 이벤트를 받고, 메뉴 수정하는 모달창이 뜬다.
+// - [x] 모달창에서 신규메뉴명을 입력 받고, 확인버튼을 누르면 메뉴가 수정된다.
+
+// 메뉴 삭제 TODO
+// - [x] 메뉴 삭제 버튼 클릭 이벤트를 받고, 메뉴 삭제 컨펌 모달창이 뜬다.
+// - [x] 확인 버튼을 끌릭하면 메뉴가 삭제된다.
+// - [x] 총 메뉴 갯수를 count하여 상단에 보여준다.
+
 //! step2 목표
 // - [ ] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
 // - [ ] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
@@ -14,82 +31,77 @@
 
 // TODO 카테고리별 메뉴판 정리
 // - [x] 에스프레소 메뉴판 정리
-// - [] 프라푸치노 메뉴판 정리
-// - [] 블렌디드 메뉴판 정리
-// - [] 티바나 메뉴판 정리
-// - [] 디저트 메뉴판 정리
+// - [x] 프라푸치노 메뉴판 정리
+// - [x] 블렌디드 메뉴판 정리
+// - [x] 티바나 메뉴판 정리
+// - [x] 디저트 메뉴판 정리
 
-// TODO 카테고리별 메뉴판 정리
+// TODO 페이지 접근시 최초 데이터 Read & Rendering
+// - [x] 페이지에 최초로 로딩될때 localStorage에 에스프레소 메뉴를 읽어온다.
+// - [x] 에스프레소 메뉴를 페이지에 그려준다.
 
-//
-
-// localStorage에 데이터를 저장한다.
-// localStorage에 저장된 데이터를 읽어온다.
-// 메뉴판 종류별로 localStorage를 관리한다.
-// 페이지 새로고침 할 떄, localStorage에서 에스프레소 메뉴를 불러와서 렌더링한다.
-// 품절 버튼을 추가한다.
-// 품절 버튼 클릭 시, localStorage에 상태값이 저장된다.
-// 클릭이벤트에서 가장 가까운 li태그의 class 속성에 sold-out class를 추가하여 상태를 변경한다.
-
-// HTML Tag
-const $ = (selector) => document.querySelector(selector);
-
-const formTag = $("#espresso-menu-form");
-const inputTag = $("#espresso-menu-name");
-const ulTag = $("#espresso-menu-list");
-const navTag = $("nav");
-
-// 로컬스토리지 메서드, 상태는 변하는 데이터, 이 앱에서 변하는 것이 무엇인가 -  메뉴명
-const store = {
-  setLocalStorage(menu) {
-    localStorage.setItem("menu", JSON.stringify(menu));
-  },
-  getLocalStorage() {
-    return JSON.parse(localStorage.getItem("menu"));
-  },
-};
+// TODO 품절 상태 관리
+// - [] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
+// - [] 품절 버튼을 추가한다.
+// - [] 품절 버튼을 클릭하면 localStorage에 상태값이 저장된다.
+// - [] 클릭이벤트에서 가장가까운 li태그의 class속성 값에 sold-out을 추가한다.
+import store from "../store/index.js";
+import { $ } from "../utils/dom.js";
 
 function App() {
+  const formTag = $("#espresso-menu-form");
+  const inputTag = $("#espresso-menu-name");
+  const ulTag = $("#espresso-menu-list");
+  const navTag = $("nav");
+  const h2Tag = $("#category-title");
+
   // this를 이용한 변수 선언 (배열)
-  this.menu = [];
+  this.menu = {
+    espresso: [],
+    frappuccino: [],
+    blended: [],
+    teavana: [],
+    desert: [],
+  };
+
+  this.currentCategory = "espresso";
 
   // App 시작 시,즉시 init메서드가 호출되어 웹페이지가 렌더링된다.
-  this.init = () => {
+  this.init = (currentCategory) => {
     // 로컬스토리지에 저장된 값을 찾는다.
-    if (store.getLocalStorage().length >= 1) {
+    console.log(currentCategory, "init");
+    if (store.getLocalStorage()) {
       // 결과값을 menu에 할당한다.
       this.menu = store.getLocalStorage();
 
       // this.menu.push(...store.getLocalStorage());
-      // console.log(this.menu);
     }
 
     // 렌더 함수를 호출하여 렌더링을 진행한다.
     render();
-    console.log("init이 호출되었는가??");
   };
 
   const render = () => {
     // localStorage에 있는 데이터를 이용해서 렌더링
     // App의 메서드 init 함수는 this.menu에 값을 할당한다.
     // render함수는 this.menu로 menu에 접근 할 수 있다.
-    const template = this.menu
-      .map((menuItem, index) => {
-        return `<li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
-      <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
-      <button
-        type="button"
-        class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
-      >
-        수정
-      </button>
-      <button
-        type="button"
-        class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
-      >
-        삭제
-      </button>
-    </li>`;
+    const template = this.menu[this.currentCategory]
+      ?.map((menuItem, index) => {
+        return `
+      <li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
+        <span class="w-100 pl-2 menu-name ${
+          menuItem.soldOut ? "sold-out" : ""
+        }">${menuItem.name}</span>
+          <button type="button" class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button">
+            품절
+          </button>
+          <button type="button" class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button">
+            수정
+          </button>
+          <button type="button" class="bg-gray-50 text-gray-500 text-sm menu-remove-button">
+            삭제
+          </button>
+      </li>`;
       })
       .join("");
 
@@ -100,8 +112,10 @@ function App() {
 
   // 메뉴개수 표시 & input 초기화
   const updateMenuCount = () => {
+    // 상태관리에 맞게 이용하는것이 좋다. this.menu를 써라
+    const menuCount = this.menu[this.currentCategory].length;
     // ulTag가 가지고 있는 모든 li의 길이를 구한다.
-    const menuCount = ulTag.querySelectorAll("li").length;
+    // const menuCount = ulTag.querySelectorAll("li").length;
 
     // 변경된 개수를 새롭게 적용한다.
     $(".menu-count").textContent = `총 ${menuCount}개`;
@@ -113,16 +127,19 @@ function App() {
   // 메뉴목록 추가
   const addMenuName = () => {
     // 사용자가 입력한 input 값을 this.menu에 단순히 추가한다.
-    this.menu.push({ name: inputTag.value });
+    if (inputTag.value === "") {
+      alert("값을 입력해주세요");
+      return;
+    }
 
-    // this를 이용한 전역변수 menu를 로컬스토리지에 저장한다.
+    this.menu[this.currentCategory].push({ name: inputTag.value });
     store.setLocalStorage(this.menu);
+    // this를 이용한 전역변수 menu를 로컬스토리지에 저장한다.
+
+    // this.menu[categoryName].push({name:inputTag.value});
+    // store.setLocalStorage(categoryName,this.menu[categoryName]);
 
     // 렌더 함수를 호출한다.
-    // ?! 메서드 init을 호출을 못하는데, 어떻게 로컬스토리지의
-    // ?! 값을 parsing 해서 렌더링을 할 수있는가?
-    // ? 혹시 submit 할때 이벤트 preventDefault ?
-    // ? 아니면 Enter 를 칠 떄, 달라지는 무언가 있는걸까?
     render();
   };
 
@@ -140,21 +157,38 @@ function App() {
 
     // index 반환, this.menu[0], this.menu[1] ...
     // 선택한 리스트의 이름에 프롬프트값을 넣어준다.
-    this.menu[menuId].name = updatedMenuName;
+    this.menu[this.currentCategory][menuId].name = updatedMenuName;
 
     // 로컬스토리지에 변경사항 반영
     store.setLocalStorage(this.menu);
 
     // text 변경을 반영한다. render함수가 별도로 작동하지 않기 떄문에
-    $menuName.textContent = updatedMenuName;
+    // $menuName.textContent = updatedMenuName;
+
+    // render 함수로 대체
+    render();
   };
 
   // 메뉴목록 삭제
   const removeMenuName = (e) => {
-    const removeList = e.target.closest("li");
-    removeList.remove();
+    const menuId = e.target.closest("li").dataset.menuId;
+    this.menu[this.currentCategory].splice(menuId, 1);
+    store.setLocalStorage(this.menu);
+
+    render();
   };
 
+  const soldOutMenu = (e) => {
+    const menuId = e.target.closest("li").dataset.menuId;
+
+    this.menu[this.currentCategory][menuId].soldOut =
+      !this.menu[this.currentCategory][menuId].soldOut;
+
+    store.setLocalStorage(this.menu);
+    render();
+  };
+
+  const initEventListeners = () => {};
   // form태그가 자동으로 전송되는걸 막아준다.
   formTag.addEventListener("submit", (e) => e.preventDefault());
 
@@ -176,7 +210,6 @@ function App() {
 
   // 버튼 클릭 시
   const submitBtn = $("#espresso-menu-submit-button");
-
   submitBtn.addEventListener("click", () => {
     if (inputTag.value === "") {
       alert("값을 입력해주세요");
@@ -191,24 +224,35 @@ function App() {
     const targetClass = e.target.classList;
     const editBtn = targetClass.contains("menu-edit-button");
     const removeBtn = targetClass.contains("menu-remove-button");
+    const soldOut = targetClass.contains("menu-sold-out-button");
 
     if (editBtn) {
       updateMenuName(e);
+      return;
     }
 
     if (removeBtn) {
-      if (confirm("정말로 삭제할꺼야?")) {
-        const menuId = e.target.closest("li").dataset.menuId;
-        this.menu.splice(menuId, 1);
-        store.setLocalStorage(this.menu);
-
+      if (confirm("정말로 삭제할까요?")) {
         removeMenuName(e);
         updateMenuCount();
 
         // alert("삭제되었습니다");
+        return;
       } else {
         alert("취소되었습니다");
+        return;
       }
+    }
+
+    // 내 솔루션
+    // if (soldOut) {
+    //   const soldOutMenu = e.target.closest("li").querySelector(".menu-name");
+    //   soldOutMenu.classList.toggle("sold-out");
+    //   return;
+    // }
+
+    if (soldOut) {
+      soldOutMenu(e);
     }
   });
 
@@ -217,11 +261,14 @@ function App() {
 
     if (isCategoryButton) {
       const categoryName = e.target.dataset.categoryName;
-      console.log(categoryName);
+      this.currentCategory = categoryName;
+      this.init(this.currentCategory);
+
+      const categoryTitle = e.target.textContent;
+      h2Tag.textContent = `${categoryTitle} 메뉴 관리`;
     }
   });
 }
 
 const app = new App();
 app.init();
-console.log(app);
